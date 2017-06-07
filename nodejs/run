@@ -1,0 +1,42 @@
+#!/bin/bash
+exec 2>&1
+
+export PATH=$PATH:/usr/local/bin
+SCRIPTPATH="$( cd "$(dirname "$0")" ; pwd -P )"
+source $SCRIPTPATH/../utils/bash/utils
+source $SCRIPTPATH/../utils/bash/docker
+
+function main (){
+  project_name=it_service
+  compose_file=docker-compose.yml
+  case "$1" in
+  "up")
+    docker_create_network $project_name
+    docker_compose_restart $project_name $compose_file
+    ;;
+  "ps")
+    docker_compose_ps $project_name $compose_file
+    ;;
+  "clean")
+    docker_compose_clean $compose_file
+    ;;
+  "at")
+    docker_attach $compose_file
+    ;;
+  "log")
+    docker_log $compose_file
+    ;;
+  *)
+    docker_compose_ps $project_name $compose_file
+    echo ""
+    echo -e "===================== \e[46m Usage \e[0m =====================\n"
+    echo "./run ps        List containers"
+    echo "./run up        Start all containers"
+    echo "./run clean     Stop and destroy all containers"
+    echo "./run at        Attach containers"
+    echo "./run log       Dump containers log"
+    ;;
+  esac
+}
+
+main $1

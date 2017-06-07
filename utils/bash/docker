@@ -1,0 +1,104 @@
+#!/bin/bash
+
+function docker_create_network (){
+  network_name=$1
+
+  docker network ls | grep $network_name 2>&1>/dev/null
+  if [ $? -ne 0 ]; then
+    docker network create $network_name
+  fi
+}
+
+function remove_container (){
+  for container in "$@"; do
+    print_warning "Destroy Container: "; echo $container
+    docker ps | grep $container 2>&1>/dev/null
+    if [ $? -eq 0 ]; then
+      print_info "kill: "; docker kill $container || true
+    fi
+
+    docker ps -a | grep $container 2>&1>/dev/null
+    if [ $? -eq 0 ]; then
+      print_info "rm: "; docker rm $container || true
+    fi
+  done
+}
+
+function docker_compose_clean (){
+  compose_file=${1:-docker-compose.yml}
+  containers=`\
+    cat $compose_file \
+    | grep container_name: \
+    | awk '{print $2}' \
+    | sed ':a;N;$!ba;s/\n/ /g'`
+
+  remove_container $containers
+}
+
+function docker_compose_ps (){
+  project_name=${1:-default}
+  compose_file=${2:-docker-compose.yml}
+  containers=$(docker-compose -p $project_name -f $compose_file ps -q)
+  if [[ $containers ]]; then
+    docker inspect \
+      --format='{{.Name}} runing={{.State.Running}}' \
+      $containers \
+      | grep runing=true 2>&1>/dev/null
+    if [ $? -eq 0 ]; then
+      print_success "Running containers:"; echo ""
+      echo -e "Name\t\tStatus"; echo "=========================="
+      docker inspect \
+        --format='{{.Name}} runing={{.State.Running}} {{.State.Status}}' \
+        $containers \
+        | grep runing=true \
+        | sed 's/\///g' \
+        | awk '{print $1"\t"$3}'
+    fi
+
+    docker inspect \
+      --format='{{.Name}} runing={{.State.Running}}' \
+      $containers \
+      | grep runing=false 2>&1>/dev/null
+    if [ $? -eq 0 ]; then
+      print_warning "Created but not running containers:"; echo ""
+      echo -e "Name\t\tStatus"; echo "=========================="
+      docker inspect \
+        --format='{{.Name}} runing={{.State.Running}} {{.State.Status}}' \
+        $containers \
+        | grep runing=false \
+        | awk '{print $1"\t\t"$3}'
+    fi
+  else
+    print_warning "No running or created containers !"; echo ""
+  fi
+}
+
+function docker_compose_restart (){
+  project_name=${1:-default}
+  compose_file=${2:-docker-compose.yml}
+  docker_compose_clean $compose_file
+  docker-compose -p $project_name -f $compose_file up --build -d
+  docker_compose_ps $project_name $compose_file
+  #sudo chown $USER: ./data -R
+  #sudo chmod 777 ./data -R
+}
+
+function docker_attach (){
+  compose_file=${1:-docker-compose.yml}
+  containers=`\
+    cat $compose_file \
+    | grep container_name: \
+    | awk '{print $2}' \
+    | sed ':a;N;$!ba;s/\n/ /g'`
+  docker exec -it $(echo $containers | awk '{print $NF}') /bin/bash
+}
+
+function docker_log (){
+  compose_file=${1:-docker-compose.yml}
+  containers=`\
+    cat $compose_file \
+    | grep container_name: \
+    | awk '{print $2}' \
+    | sed ':a;N;$!ba;s/\n/ /g'`
+  docker logs -f $(echo $containers | awk '{print $NF}')
+}

@@ -1,0 +1,5 @@
+FROM node:6
+
+ENTRYPOINT /usr/bin/tail -f /dev/null
+
+
