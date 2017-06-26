@@ -1,5 +1,5 @@
 FROM node:6
 
+RUN yarn global add hexo
+
 ENTRYPOINT /usr/bin/tail -f /dev/null
-
-
