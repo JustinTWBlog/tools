@@ -1,5 +1,5 @@
 FROM node:6
 
-RUN yarn global add hexo
+RUN yarn global add hexo hackmyresume
 
 ENTRYPOINT /usr/bin/tail -f /dev/null
