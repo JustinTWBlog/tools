@@ -14,8 +14,8 @@ services:
       - ./data/nodejs:/data/nodejs:rw
     #environment:
     #  SERVICE_DISCOVERY: env
-    #ports:
-    #  - 172.16.0.100:4568:4568
+    ports:
+      - 4200:4200
     #network_mode: host
     #extra_hosts:
     #  - google:8.8.8.8
