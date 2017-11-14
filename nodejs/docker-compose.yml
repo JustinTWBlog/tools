@@ -6,7 +6,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.df
-    image: hb/nodejs
+    image: environment/nodejs
     container_name: nodejs
     hostname: nodejs.hopebaytech.com
     volumes:
