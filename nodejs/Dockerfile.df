@@ -30,8 +30,6 @@ RUN set -ex \
   && chmod +x /usr/local/bin/yarn
 # End of Install Yarn 1.3.2
 
-RUN yarn config set proxy http://efss-cache:3128/ && yarn config set https-proxy http://efss-cache:3128/
-
 RUN yarn global add hexo hackmyresume @angular/cli
 
 ENTRYPOINT /usr/bin/tail -f /dev/null
